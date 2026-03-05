@@ -1,0 +1,46 @@
+[07:13:17] ▶ Starting: Load Network
+Loaded network: 737 nodes, 2295 edges
+[07:13:17] ✓ Load Network
+  Time: 0.12s
+  CPU: 0.0%
+  Memory: 83.4 MB (Δ +6.7 MB)
+[07:13:17] ▶ Starting: Run Louvain Algorithm
+Running Louvain (res=1.0, seed=1)...
+[07:13:18] ✓ Run Louvain Algorithm
+  Time: 0.14s
+  CPU: 0.0%
+  Memory: 83.4 MB (Δ +0.1 MB)
+[07:13:18] ▶ Starting: Process Modules
+  - Found 20 valid modules (>3 nodes)
+[07:13:18] ✓ Process Modules
+  Time: 0.10s
+  CPU: 0.0%
+  Memory: 83.7 MB (Δ +0.3 MB)
+[07:13:18] ▶ Starting: Save GraphML
+[07:13:18] ✓ Save GraphML
+  Time: 0.14s
+  CPU: 0.0%
+  Memory: 84.0 MB (Δ +0.2 MB)
+[07:13:18] ▶ Starting: Save Excel
+  - Excel saved: 20 module columns.
+[07:13:18] ✓ Save Excel
+  Time: 0.17s
+  CPU: 0.0%
+  Memory: 86.0 MB (Δ +2.1 MB)
+
+================================================================================
+PERFORMANCE SUMMARY: Louvain Module Detection
+================================================================================
+Step                                Time            CPU %      Mem Δ (MB)   Status    
+--------------------------------------------------------------------------------
+Load Network                        0.12s              0.0           6.7    ✓ completed
+Run Louvain Algorithm               0.14s              0.0           0.1    ✓ completed
+Process Modules                     0.10s              0.0           0.3    ✓ completed
+Save GraphML                        0.14s              0.0           0.2    ✓ completed
+Save Excel                          0.17s              0.0           2.1    ✓ completed
+--------------------------------------------------------------------------------
+TOTAL PIPELINE TIME                 1.29s          
+FINAL CPU USAGE                     0.0%
+TOTAL MEMORY CHANGE                 +9.4 MB (Final: 86.0 MB)
+================================================================================
+
