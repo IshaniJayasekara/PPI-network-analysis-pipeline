@@ -1,7 +1,34 @@
-report.html
+# Nextflow
+work/
+.nextflow/
+.nextflow.log*
+.nextflow.cache
+.timeline.html
+.trace
+.report.html
+.dag.dot
 
+# Pipeline outputs
 results/
 
-.nexflow/
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
 
-work/
+# environments
+.env
+.venv
+venv/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# logs
+*.log
