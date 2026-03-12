@@ -1,0 +1,51 @@
+{
+  "pipeline_name": "GO Annotation Filtering",
+  "total_time": 1.3054919242858887,
+  "timestamp": "2026-03-12T11:00:51.337830",
+  "steps": {
+    "Load GAF file": {
+      "start_time": 1773293450.1328304,
+      "start_cpu": 0.0,
+      "start_mem": 68.8203125,
+      "status": "completed",
+      "end_time": 1773293450.2413023,
+      "end_cpu": 0.0,
+      "end_mem": 69.65234375,
+      "elapsed": 0.10847187042236328,
+      "mem_delta": 0.83203125
+    },
+    "Filter evidence codes": {
+      "start_time": 1773293450.342568,
+      "start_cpu": 0.0,
+      "start_mem": 70.05078125,
+      "status": "completed",
+      "end_time": 1773293450.446586,
+      "end_cpu": 0.0,
+      "end_mem": 70.51953125,
+      "elapsed": 0.10401797294616699,
+      "mem_delta": 0.46875
+    },
+    "Aggregate to protein level": {
+      "start_time": 1773293450.5473108,
+      "start_cpu": 0.0,
+      "start_mem": 70.51953125,
+      "status": "completed",
+      "end_time": 1773293450.6931796,
+      "end_cpu": 0.0,
+      "end_mem": 71.8515625,
+      "elapsed": 0.14586877822875977,
+      "mem_delta": 1.33203125
+    },
+    "Save results": {
+      "start_time": 1773293450.7938626,
+      "start_cpu": 0.0,
+      "start_mem": 71.8515625,
+      "status": "completed",
+      "end_time": 1773293451.1365361,
+      "end_cpu": 0.0,
+      "end_mem": 90.70703125,
+      "elapsed": 0.34267354011535645,
+      "mem_delta": 18.85546875
+    }
+  }
+}

@@ -1,16 +1,12 @@
 #!/usr/bin/env python3
 """
-Date: 2026.01.30
+Date: 2026.03.12
 Author: Ishani Jayasekara
-Purpose: GO Annotation Filter by evidence codes (IEA, NAS, etc.) and remove redundant protein records
-
-Input - plain text file directly downloaded from AMIGO2
-Output - xlsx file including processed data
+Purpose: Automated GO Annotation Filter & Aggregator. 
+         Handles varying GAF formats (14-17+ columns) and addresses float/NaN errors.
 
 Usage:
     python process_protein_data.py <gaf_file> <exclude_codes>
-Example:
-    python process_protein_data.py goa_subset.gaf "IEA,NAS"
 """
 
 import pandas as pd
@@ -19,15 +15,34 @@ import os
 from pathlib import Path
 from performance_tracker import PerformanceTracker, print_system_info
 
-
 # ------------------------------------------------------------
 def generate_output_filename(input_file):
-    return f"{Path(input_file).name}_processed.xlsx"
+    return f"{Path(input_file).stem}_processed.xlsx"
 
+# ------------------------------------------------------------
+def safe_join(series):
+    """
+    Bioinformatics cleanup: Removes NaNs, converts everything to string,
+    strips whitespace, removes duplicates, and joins with '|'.
+    """
+    # Filter out nulls/NaNs and empty strings, then convert all to string
+    clean_items = [
+        str(item).strip() 
+        for item in series 
+        if pd.notna(item) and str(item).strip() != ""
+    ]
+    # Return unique, sorted items joined by pipe
+    return "|".join(sorted(set(clean_items)))
+
+# ------------------------------------------------------------
+def validate_data(df, required_cols):
+    missing = [col for col in required_cols if col not in df.columns]
+    if missing:
+        print(f"❌ Error: Missing essential columns: {missing}")
+        sys.exit(1)
 
 # ------------------------------------------------------------
 def main():
-
     if len(sys.argv) < 3:
         print("Usage: python process_protein_data.py <gaf_file> <exclude_codes>")
         sys.exit(1)
@@ -53,81 +68,77 @@ def main():
     tracker = PerformanceTracker("GO Annotation Filtering")
 
     # ------------------------------------------------------------
-    # STEP 1: Load plain GAF (no headers)
+    # STEP 1: Load GAF
     # ------------------------------------------------------------
     tracker.start_step("Load GAF file")
-
+    
     df = pd.read_csv(
         input_file,
         sep="\t",
         header=None,
         comment="!",
-        dtype=str
+        dtype=str,
+        low_memory=False
     )
-
+    
     tracker.end_step("Load GAF file")
 
     # ------------------------------------------------------------
-    # STEP 2: Assign GAF 2.x columns
+    # STEP 2: Assign GAF columns dynamically
     # ------------------------------------------------------------
     gaf_columns = [
-        "DB",
-        "UniProtKB",
-        "Gene_Symbol",
-        "Qualifier",
-        "GO_Term",
-        "Reference",
-        "Evidence",
-        "With_From",
-        "Aspect",
-        "DB_Object_Name",
-        "DB_Object_Synonym",
-        "DB_Object_Type",
-        "Taxon",
-        "Date",
-        "Assigned_By",
-        "Annotation_Extension",
+        "DB", "UniProtKB", "Gene_Symbol", "Qualifier", "GO_Term",
+        "Reference", "Evidence", "With_From", "Aspect",
+        "DB_Object_Name", "DB_Object_Synonym", "DB_Object_Type",
+        "Taxon", "Date", "Assigned_By", "Annotation_Extension",
         "Gene_Product_Form_ID"
     ]
 
-    df = df.iloc[:, :len(gaf_columns)]
-    df.columns = gaf_columns
+    actual_col_count = df.shape[1]
+    df.columns = gaf_columns[:actual_col_count]
+    print(f"ℹ️  Detected {actual_col_count} columns in GAF file.")
+
+    validate_data(df, ["UniProtKB", "GO_Term", "Evidence"])
 
     # ------------------------------------------------------------
-    # STEP 3: Clean & filter evidence
+    # STEP 3: Filter Evidence Codes
     # ------------------------------------------------------------
-    df["Evidence"] = df["Evidence"].str.upper().str.strip()
-
     tracker.start_step("Filter evidence codes")
+    
+    # Clean evidence column for comparison
+    df["Evidence"] = df["Evidence"].str.upper().str.strip()
     filtered_df = df[~df["Evidence"].isin(exclude_codes)].copy()
+    
     tracker.end_step("Filter evidence codes")
 
     # ------------------------------------------------------------
-    # STEP 4: AGGREGATE TO ONE ROW PER PROTEIN
+    # STEP 4: Aggregate to Protein Level
     # ------------------------------------------------------------
     tracker.start_step("Aggregate to protein level")
 
+    # Group by Protein ID and apply safe_join
     protein_df = (
         filtered_df
         .groupby("UniProtKB", as_index=False)
         .agg({
             "Gene_Symbol": "first",
-            "GO_Term": lambda x: "|".join(sorted(set(x))),
-            "Aspect": lambda x: "|".join(sorted(set(x))),
-            "Evidence": lambda x: "|".join(sorted(set(x))),
-            "Reference": lambda x: "|".join(sorted(set(x.dropna()))),
+            "GO_Term": safe_join,
+            "Aspect": safe_join,
+            "Evidence": safe_join,
+            "Reference": safe_join,
             "Taxon": "first"
         })
     )
 
-    protein_df["GO_Annotation_Count"] = (
-        filtered_df.groupby("UniProtKB")["GO_Term"].nunique().values
-    )
+    # Calculate Unique GO counts accurately
+    counts = filtered_df.groupby("UniProtKB")["GO_Term"].nunique().reset_index()
+    counts.columns = ["UniProtKB", "GO_Annotation_Count"]
+    protein_df = protein_df.merge(counts, on="UniProtKB", how="left")
 
     tracker.end_step("Aggregate to protein level")
 
     # ------------------------------------------------------------
-    # STEP 5: Save output
+    # STEP 5: Save Output
     # ------------------------------------------------------------
     tracker.start_step("Save results")
 
@@ -137,15 +148,12 @@ def main():
 
     tracker.end_step("Save results")
 
-    # ------------------------------------------------------------
-    # Summary
-    # ------------------------------------------------------------
     tracker.print_summary()
     tracker.save_metrics(metrics_file)
 
     print(f"\n✓ PIPELINE COMPLETED SUCCESSFULLY")
-    print(f"Unique proteins: {protein_df['UniProtKB'].nunique():,}")
-    print(f"Output file: {output_file}\n")
+    print(f"Unique proteins: {len(protein_df):,}")
+    print(f"Output: {output_file}\n")
 
 
 if __name__ == "__main__":
